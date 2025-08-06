@@ -41,7 +41,7 @@ const sendEmail = async (to, subject, html) => {
  */
 const sendResetPasswordEmail = async (to, token) => {
   const subject = 'Reset Your Password';
-  const resetPasswordUrl = `https://client-nine-ochre.vercel.app/reset-password?token=${token}`;
+  const resetPasswordUrl = `https://client-seven-rose-65.vercel.app/reset-password?token=${token}`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h2 style="color: #333;">Password Reset Request</h2>
@@ -66,7 +66,7 @@ const sendResetPasswordEmail = async (to, token) => {
  */
 const sendVerificationEmail = async (to, token) => {
   const subject = 'Verify Your Email Address';
-  const verificationEmailUrl = `https://client-nine-ochre.vercel.app/verify-email?token=${token}`;
+  const verificationEmailUrl = `https://client-seven-rose-65.vercel.app/verify-email?token=${token}`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h2 style="color: #333;">Welcome to RasReserve</h2>
