@@ -13,6 +13,8 @@ router.post('/refresh-tokens', validate(authValidation.refreshTokens), authContr
 router.post('/forgot-password', validate(authValidation.forgotPassword), authController.forgotPassword);
 router.post('/reset-password', validate(authValidation.resetPassword), authController.resetPassword);
 router.post('/send-verification-email', auth(), authController.sendVerificationEmail);
-router.get('/verify-email', validate(authValidation.verifyEmail), authController.verifyEmail);
+router.route('/verify-email')
+  .get(validate(authValidation.verifyEmail), authController.verifyEmail)
+  .post(validate(authValidation.verifyEmail), authController.verifyEmail);
 
 module.exports = router;
