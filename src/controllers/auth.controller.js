@@ -48,7 +48,11 @@ const forgotPassword = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  await authService.resetPassword(req.query.token, req.body.password);
+  const token = req.query.token || req.body.token;
+  if (!token) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Reset token is required');
+  }
+  await authService.resetPassword(token, req.body.password);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
