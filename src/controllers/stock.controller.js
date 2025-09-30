@@ -1,6 +1,5 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
-const ApiError = require('../utils/ApiError');
 const { stockService } = require('../services');
 
 const createStock = catchAsync(async (req, res) => {
@@ -16,9 +15,10 @@ const getStocks = catchAsync(async (req, res) => {
 const getStock = catchAsync(async (req, res) => {
   const stock = await stockService.getStockById(req.params.stockId);
   if (!stock) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Stock item not found');
+    res.status(httpStatus.NOT_FOUND).send({ message: 'Stock item not found' });
+  } else {
+    res.status(httpStatus.OK).send(stock);
   }
-  res.status(httpStatus.OK).send(stock);
 });
 
 const updateStock = catchAsync(async (req, res) => {
