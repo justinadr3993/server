@@ -25,6 +25,10 @@ const stockHistorySchema = new mongoose.Schema({
     enum: ['restock', 'usage'],
     required: true,
   },
+  date: {
+    type: Date,
+    default: Date.now
+  }
 }, { timestamps: true });
 
 const stockSchema = new mongoose.Schema(
@@ -47,6 +51,7 @@ const stockSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
+      default: 0
     },
     history: {
       type: [stockHistorySchema],

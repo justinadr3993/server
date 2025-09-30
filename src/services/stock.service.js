@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const { Stock } = require('../models');
+const ApiError = require('../utils/ApiError');
+const httpStatus = require('http-status');
 
 const createStock = async (stockBody) => {
   const stockData = {
@@ -20,22 +22,10 @@ const getStockById = async (id) => {
 const updateStockById = async (stockId, updateBody) => {
   const stock = await getStockById(stockId);
   if (!stock) {
-    throw new Error('Stock item not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Stock item not found');
   }
 
-  if (updateBody.quantity !== undefined && updateBody.quantity !== stock.quantity) {
-    const change = updateBody.quantity - stock.quantity;
-    const operation = change > 0 ? 'restock' : 'usage';
-    
-    stock.history.push({
-      type: stock.type,
-      category: stock.category,
-      price: stock.price,
-      change: Math.abs(change),
-      operation
-    });
-  }
-
+  // Update basic fields
   Object.assign(stock, updateBody);
   await stock.save();
   return stock;
@@ -44,7 +34,7 @@ const updateStockById = async (stockId, updateBody) => {
 const deleteStockById = async (stockId) => {
   const stock = await getStockById(stockId);
   if (!stock) {
-    throw new Error('Stock item not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Stock item not found');
   }
   await stock.remove();
   return stock;
@@ -53,18 +43,25 @@ const deleteStockById = async (stockId) => {
 const recordStockChange = async (stockId, change, operation) => {
   const stock = await getStockById(stockId);
   if (!stock) {
-    throw new Error('Stock item not found');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Stock item not found');
   }
 
-  stock.history.push({
+  const historyEntry = {
     type: stock.type,
     category: stock.category,
     price: stock.price,
     change: Math.abs(change),
-    operation
-  });
+    operation,
+    date: new Date()
+  };
 
+  stock.history.push(historyEntry);
   stock.quantity += change;
+  
+  if (stock.quantity < 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Insufficient stock quantity');
+  }
+  
   await stock.save();
   return stock;
 };
@@ -115,30 +112,6 @@ const getStockAnalytics = async () => {
     .select('type category price quantity')
     .sort({ quantity: 1 });
 
-  // Get usage and restock trends
-  const trends = await Stock.aggregate([
-    { $unwind: '$history' },
-    {
-      $group: {
-        _id: {
-          category: '$history.category',
-          operation: '$history.operation'
-        },
-        totalChange: { $sum: '$history.change' },
-        count: { $sum: 1 }
-      }
-    },
-    {
-      $project: {
-        category: '$_id.category',
-        operation: '$_id.operation',
-        totalChange: 1,
-        averageChange: { $divide: ['$totalChange', '$count'] },
-        _id: 0
-      }
-    }
-  ]);
-
   return {
     byCategory: results,
     overall: overall[0] || {
@@ -146,9 +119,71 @@ const getStockAnalytics = async () => {
       totalValue: 0,
       lowStockItems: 0
     },
-    lowStockItemsList,
-    trends: []
+    lowStockItemsList
   };
+};
+
+const getStockHistory = async (timeframe = 'month') => {
+  const now = new Date();
+  let startDate = new Date(now);
+  
+  // Calculate start date based on timeframe
+  switch (timeframe) {
+    case 'week':
+      startDate.setDate(now.getDate() - 7);
+      break;
+    case 'month':
+      startDate.setMonth(now.getMonth() - 1);
+      break;
+    case 'year':
+      startDate.setFullYear(now.getFullYear() - 1);
+      break;
+    default:
+      startDate.setMonth(now.getMonth() - 1);
+  }
+
+  const history = await Stock.aggregate([
+    { $unwind: '$history' },
+    {
+      $match: {
+        'history.date': { 
+          $gte: startDate,
+          $lte: now
+        }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: {
+            $dateToString: {
+              format: timeframe === 'year' ? '%Y-%m' : '%Y-%m-%d',
+              date: '$history.date'
+            }
+          },
+          operation: '$history.operation'
+        },
+        totalChange: { $sum: '$history.change' }
+      }
+    },
+    {
+      $project: {
+        date: '$_id.date',
+        operation: '$_id.operation',
+        totalChange: 1,
+        _id: 0
+      }
+    },
+    { $sort: { date: 1 } }
+  ]);
+
+  // Format data for the frontend charts
+  const formattedHistory = history.map(item => ({
+    ...item,
+    totalChange: Number(item.totalChange)
+  }));
+
+  return formattedHistory;
 };
 
 const getStockForecast = async () => {
@@ -157,7 +192,7 @@ const getStockForecast = async () => {
     { 
       $match: { 
         'history.operation': 'usage',
-        'history.createdAt': { 
+        'history.date': { 
           $gte: new Date(new Date().setDate(new Date().getDate() - 30)) 
         }
       } 
@@ -179,7 +214,7 @@ const getStockForecast = async () => {
         dailyUsage: 1,
         currentQuantity: 1,
         daysUntilEmpty: { 
-          $divide: ['$currentQuantity', '$dailyUsage'] 
+          $divide: ['$currentQuantity', { $max: ['$dailyUsage', 0.1] }] 
         },
         _id: 0
       }
@@ -188,68 +223,6 @@ const getStockForecast = async () => {
   ]);
 
   return usageData;
-};
-
-const getStockHistory = async (timeframe = 'month') => {
-  const now = new Date();
-  const startDate = new Date(now);
-  
-  // Set time ranges based on timeframe
-  if (timeframe === 'week') {
-    startDate.setDate(now.getDate() - 7);
-  } else if (timeframe === 'month') {
-    startDate.setMonth(now.getMonth() - 1);
-  } else if (timeframe === 'year') {
-    startDate.setFullYear(now.getFullYear() - 1);
-  }
-
-  // Reset time components
-  startDate.setHours(0, 0, 0, 0);
-  now.setHours(23, 59, 59, 999);
-
-  const history = await Stock.aggregate([
-    { $unwind: '$history' },
-    {
-      $match: {
-        'history.createdAt': { 
-          $gte: startDate,
-          $lte: now
-        }
-      }
-    },
-    {
-      $project: {
-        date: {
-          $dateToString: {
-            format: timeframe === 'year' ? '%Y-%m' : '%Y-%m-%d',
-            date: '$history.createdAt'
-          }
-        },
-        operation: '$history.operation',
-        change: '$history.change'
-      }
-    },
-    {
-      $group: {
-        _id: {
-          date: '$date',
-          operation: '$operation'
-        },
-        totalChange: { $sum: '$change' }
-      }
-    },
-    {
-      $project: {
-        date: '$_id.date',
-        operation: '$_id.operation',
-        totalChange: 1,
-        _id: 0
-      }
-    },
-    { $sort: { date: 1 } }
-  ]);
-
-  return history;
 };
 
 module.exports = {
