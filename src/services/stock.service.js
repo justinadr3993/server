@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const { Stock } = require('../models');
 
 const createStock = async (stockBody) => {
@@ -10,7 +9,8 @@ const createStock = async (stockBody) => {
 };
 
 const getStocks = async (filter, options) => {
-  return Stock.paginate(filter, options);
+  const stocks = await Stock.paginate(filter, options);
+  return stocks;
 };
 
 const getStockById = async (id) => {
@@ -23,6 +23,7 @@ const updateStockById = async (stockId, updateBody) => {
     throw new Error('Stock item not found');
   }
 
+  // If quantity is being updated, record the change in history
   if (updateBody.quantity !== undefined && updateBody.quantity !== stock.quantity) {
     const change = updateBody.quantity - stock.quantity;
     const operation = change > 0 ? 'restock' : 'usage';
@@ -46,7 +47,7 @@ const deleteStockById = async (stockId) => {
   if (!stock) {
     throw new Error('Stock item not found');
   }
-  await stock.remove();
+  await Stock.findByIdAndDelete(stockId);
   return stock;
 };
 
@@ -54,6 +55,11 @@ const recordStockChange = async (stockId, change, operation) => {
   const stock = await getStockById(stockId);
   if (!stock) {
     throw new Error('Stock item not found');
+  }
+
+  // Validate operation
+  if (operation === 'usage' && stock.quantity + change < 0) {
+    throw new Error('Insufficient stock for this operation');
   }
 
   stock.history.push({
@@ -70,16 +76,18 @@ const recordStockChange = async (stockId, change, operation) => {
 };
 
 const getStockAnalytics = async () => {
-  const results = await Stock.aggregate([
+  // Category-wise analytics
+  const categoryResults = await Stock.aggregate([
     {
       $group: {
         _id: '$category',
         totalItems: { $sum: 1 },
         totalValue: { $sum: { $multiply: ['$price', '$quantity'] } },
+        totalQuantity: { $sum: '$quantity' },
         averagePrice: { $avg: '$price' },
         lowStockItems: {
           $sum: {
-            $cond: [{ $lte: ['$quantity', 5] }, 1, 0]
+            $cond: [{ $lte: ['$quantity', '$minStockLevel'] }, 1, 0]
           }
         }
       }
@@ -89,33 +97,41 @@ const getStockAnalytics = async () => {
         category: '$_id',
         totalItems: 1,
         totalValue: 1,
+        totalQuantity: 1,
         averagePrice: 1,
         lowStockItems: 1,
         _id: 0
       }
-    }
+    },
+    { $sort: { category: 1 } }
   ]);
 
+  // Overall analytics
   const overall = await Stock.aggregate([
     {
       $group: {
         _id: null,
         totalItems: { $sum: 1 },
         totalValue: { $sum: { $multiply: ['$price', '$quantity'] } },
+        totalQuantity: { $sum: '$quantity' },
         lowStockItems: {
           $sum: {
-            $cond: [{ $lte: ['$quantity', 5] }, 1, 0]
+            $cond: [{ $lte: ['$quantity', '$minStockLevel'] }, 1, 0]
           }
-        }
+        },
+        averageStockValue: { $avg: { $multiply: ['$price', '$quantity'] } }
       }
     }
   ]);
 
-  const lowStockItemsList = await Stock.find({ quantity: { $lte: 5 } })
-    .select('type category price quantity')
+  // Low stock items
+  const lowStockItemsList = await Stock.find({ 
+    $expr: { $lte: ['$quantity', '$minStockLevel'] } 
+  })
+    .select('type category price quantity minStockLevel')
     .sort({ quantity: 1 });
 
-  // Get usage and restock trends
+  // Usage trends
   const trends = await Stock.aggregate([
     { $unwind: '$history' },
     {
@@ -125,7 +141,8 @@ const getStockAnalytics = async () => {
           operation: '$history.operation'
         },
         totalChange: { $sum: '$history.change' },
-        count: { $sum: 1 }
+        count: { $sum: 1 },
+        totalValue: { $sum: { $multiply: ['$history.price', '$history.change'] } }
       }
     },
     {
@@ -133,6 +150,7 @@ const getStockAnalytics = async () => {
         category: '$_id.category',
         operation: '$_id.operation',
         totalChange: 1,
+        totalValue: 1,
         averageChange: { $divide: ['$totalChange', '$count'] },
         _id: 0
       }
@@ -140,46 +158,56 @@ const getStockAnalytics = async () => {
   ]);
 
   return {
-    byCategory: results,
+    byCategory: categoryResults,
     overall: overall[0] || {
       totalItems: 0,
       totalValue: 0,
-      lowStockItems: 0
+      totalQuantity: 0,
+      lowStockItems: 0,
+      averageStockValue: 0
     },
     lowStockItemsList,
-    trends: []
+    trends
   };
 };
 
 const getStockForecast = async () => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   const usageData = await Stock.aggregate([
     { $unwind: '$history' },
     { 
       $match: { 
         'history.operation': 'usage',
         'history.createdAt': { 
-          $gte: new Date(new Date().setDate(new Date().getDate() - 30)) 
+          $gte: thirtyDaysAgo
         }
       } 
     },
     {
       $group: {
-        _id: '$type',
+        _id: '$_id',
+        type: { $first: '$type' },
         category: { $first: '$category' },
         totalUsage: { $sum: '$history.change' },
-        dailyUsage: { $avg: '$history.change' },
+        usageDays: { $addToSet: { $dateToString: { format: '%Y-%m-%d', date: '$history.createdAt' } } },
         currentQuantity: { $first: '$quantity' }
       }
     },
     {
       $project: {
-        item: '$_id',
+        item: '$type',
         category: 1,
         totalUsage: 1,
-        dailyUsage: 1,
+        dailyUsage: { $divide: ['$totalUsage', { $size: '$usageDays' }] },
         currentQuantity: 1,
         daysUntilEmpty: { 
-          $divide: ['$currentQuantity', '$dailyUsage'] 
+          $cond: [
+            { $gt: ['$totalUsage', 0] },
+            { $divide: ['$currentQuantity', { $divide: ['$totalUsage', 30] }] },
+            0
+          ]
         },
         _id: 0
       }
@@ -187,20 +215,26 @@ const getStockForecast = async () => {
     { $sort: { daysUntilEmpty: 1 } }
   ]);
 
-  return usageData;
+  return usageData.filter(item => item.dailyUsage > 0);
 };
 
 const getStockHistory = async (timeframe = 'month') => {
   const now = new Date();
-  const startDate = new Date(now);
+  let startDate = new Date(now);
   
   // Set time ranges based on timeframe
-  if (timeframe === 'week') {
-    startDate.setDate(now.getDate() - 7);
-  } else if (timeframe === 'month') {
-    startDate.setMonth(now.getMonth() - 1);
-  } else if (timeframe === 'year') {
-    startDate.setFullYear(now.getFullYear() - 1);
+  switch (timeframe) {
+    case 'week':
+      startDate.setDate(now.getDate() - 7);
+      break;
+    case 'month':
+      startDate.setMonth(now.getMonth() - 1);
+      break;
+    case 'year':
+      startDate.setFullYear(now.getFullYear() - 1);
+      break;
+    default:
+      startDate.setMonth(now.getMonth() - 1);
   }
 
   // Reset time components
@@ -226,14 +260,16 @@ const getStockHistory = async (timeframe = 'month') => {
           }
         },
         operation: '$history.operation',
-        change: '$history.change'
+        change: '$history.change',
+        category: '$history.category'
       }
     },
     {
       $group: {
         _id: {
           date: '$date',
-          operation: '$operation'
+          operation: '$operation',
+          category: '$category'
         },
         totalChange: { $sum: '$change' }
       }
@@ -242,6 +278,7 @@ const getStockHistory = async (timeframe = 'month') => {
       $project: {
         date: '$_id.date',
         operation: '$_id.operation',
+        category: '$_id.category',
         totalChange: 1,
         _id: 0
       }

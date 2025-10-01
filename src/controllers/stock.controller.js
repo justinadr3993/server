@@ -8,17 +8,16 @@ const createStock = catchAsync(async (req, res) => {
 });
 
 const getStocks = catchAsync(async (req, res) => {
-  const stocks = await stockService.getStocks(req.query);
-  res.status(httpStatus.OK).send(stocks);
+  const result = await stockService.getStocks(req.query);
+  res.status(httpStatus.OK).send(result);
 });
 
 const getStock = catchAsync(async (req, res) => {
   const stock = await stockService.getStockById(req.params.stockId);
   if (!stock) {
-    res.status(httpStatus.NOT_FOUND).send({ message: 'Stock item not found' });
-  } else {
-    res.status(httpStatus.OK).send(stock);
+    return res.status(httpStatus.NOT_FOUND).send({ message: 'Stock item not found' });
   }
+  res.status(httpStatus.OK).send(stock);
 });
 
 const updateStock = catchAsync(async (req, res) => {

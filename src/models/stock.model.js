@@ -9,7 +9,7 @@ const stockHistorySchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Oil', 'Tire', 'Brake'],
+    enum: ['Oil', 'Tire', 'Brake', 'Filter', 'Battery'],
     required: true,
   },
   price: {
@@ -25,7 +25,10 @@ const stockHistorySchema = new mongoose.Schema({
     enum: ['restock', 'usage'],
     required: true,
   },
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  _id: true 
+});
 
 const stockSchema = new mongoose.Schema(
   {
@@ -36,7 +39,7 @@ const stockSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Oil', 'Tire', 'Brake'],
+      enum: ['Oil', 'Tire', 'Brake', 'Filter', 'Battery'],
       required: true,
     },
     price: {
@@ -48,10 +51,12 @@ const stockSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-    history: {
-      type: [stockHistorySchema],
-      default: []
+    minStockLevel: {
+      type: Number,
+      default: 5,
+      min: 0
     },
+    history: [stockHistorySchema],
   },
   {
     timestamps: true,
@@ -61,6 +66,13 @@ const stockSchema = new mongoose.Schema(
 // Add plugins
 stockSchema.plugin(toJSON);
 stockSchema.plugin(paginate);
+
+/**
+ * Check if quantity is below minimum stock level
+ */
+stockSchema.virtual('isLowStock').get(function() {
+  return this.quantity <= this.minStockLevel;
+});
 
 /**
  * @typedef Stock
