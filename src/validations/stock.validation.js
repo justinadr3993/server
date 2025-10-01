@@ -3,11 +3,10 @@ const { objectId } = require('./custom.validation');
 
 const createStock = {
   body: Joi.object().keys({
-    type: Joi.string().required().trim(),
-    category: Joi.string().valid('Oil', 'Tire', 'Brake', 'Filter', 'Battery').required(),
+    type: Joi.string().required(),
+    category: Joi.string().valid('Oil', 'Tire', 'Brake').required(),
     price: Joi.number().required().positive(),
-    quantity: Joi.number().min(0).default(0),
-    minStockLevel: Joi.number().min(0).default(5)
+    quantity: Joi.number().min(0).default(0) // Make optional with default 0
   })
 };
 
@@ -44,8 +43,7 @@ const getStock = {
 const getStocks = {
   query: Joi.object().keys({
     type: Joi.string(),
-    category: Joi.string().valid('Oil', 'Tire', 'Brake', 'Filter', 'Battery'),
-    lowStock: Joi.boolean(),
+    category: Joi.string().valid('Oil', 'Tire', 'Brake'),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer()
@@ -57,13 +55,13 @@ const updateStock = {
     stockId: Joi.string().custom(objectId).required()
   }),
   body: Joi.object().keys({
-    type: Joi.string().trim(),
-    category: Joi.string().valid('Oil', 'Tire', 'Brake', 'Filter', 'Battery'),
+    type: Joi.string(),
+    category: Joi.string().valid('Oil', 'Tire', 'Brake'),
     price: Joi.number().positive(),
-    quantity: Joi.number().min(0),
-    minStockLevel: Joi.number().min(0)
+    quantity: Joi.number().min(0)
   }).min(1)
 };
+
 
 const deleteStock = {
   params: Joi.object().keys({

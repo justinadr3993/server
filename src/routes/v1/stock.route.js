@@ -9,9 +9,9 @@ router.route('/')
   .get(validate(stockValidation.getStocks), stockController.getStocks)
   .post(validate(stockValidation.createStock), stockController.createStock);
 
-router.get('/analytics', stockController.getStockAnalytics);
+router.get('/analytics', validate(stockValidation.getStockAnalytics), stockController.getStockAnalytics);
 router.get('/history', validate(stockValidation.getStockHistory), stockController.getStockHistory);
-router.get('/forecast', stockController.getStockForecast);
+router.get('/forecast', validate(stockValidation.getStockForecast), stockController.getStockForecast);
 
 router.route('/:stockId/change')
   .post(validate(stockValidation.recordStockChange), stockController.recordStockChange);
