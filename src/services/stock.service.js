@@ -23,15 +23,8 @@ const updateStockById = async (stockId, updateBody) => {
     throw new Error('Stock item not found');
   }
 
-  // Store original quantity before update
-  const originalQuantity = stock.quantity;
-
-  // Apply the update
-  Object.assign(stock, updateBody);
-
-  // Check if quantity changed and record in history
-  if (updateBody.quantity !== undefined && updateBody.quantity !== originalQuantity) {
-    const change = updateBody.quantity - originalQuantity;
+  if (updateBody.quantity !== undefined && updateBody.quantity !== stock.quantity) {
+    const change = updateBody.quantity - stock.quantity;
     const operation = change > 0 ? 'restock' : 'usage';
     
     stock.history.push({
@@ -43,6 +36,7 @@ const updateStockById = async (stockId, updateBody) => {
     });
   }
 
+  Object.assign(stock, updateBody);
   await stock.save();
   return stock;
 };
@@ -52,7 +46,7 @@ const deleteStockById = async (stockId) => {
   if (!stock) {
     throw new Error('Stock item not found');
   }
-  await Stock.findByIdAndDelete(stockId);
+  await stock.remove();
   return stock;
 };
 
@@ -60,6 +54,12 @@ const recordStockChange = async (stockId, change, operation) => {
   const stock = await getStockById(stockId);
   if (!stock) {
     throw new Error('Stock item not found');
+  }
+
+  // Calculate the actual change based on operation
+  let actualChange = change;
+  if (operation === 'usage') {
+    actualChange = -change; // Make it negative for usage
   }
 
   stock.history.push({
@@ -70,7 +70,7 @@ const recordStockChange = async (stockId, change, operation) => {
     operation
   });
 
-  stock.quantity += change;
+  stock.quantity += actualChange;
   await stock.save();
   return stock;
 };
@@ -153,7 +153,7 @@ const getStockAnalytics = async () => {
       lowStockItems: 0
     },
     lowStockItemsList,
-    trends: trends
+    trends: []
   };
 };
 
