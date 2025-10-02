@@ -14,10 +14,11 @@ router
 router
   .route('/:userId')
   .get(validate(userValidation.getUser), userController.getUser)
-  .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
   .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
 
-router.route('/:userId/password').patch(auth(), validate(userValidation.changePassword), userController.changePassword);
+// Fixed password change route - added proper validation
+router.route('/:userId/password')
+  .patch(auth(), validate(userValidation.changePassword), userController.changePassword);
 
 module.exports = router;

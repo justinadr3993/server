@@ -55,9 +55,12 @@ const updateUser = {
 };
 
 const changePassword = {
+  params: Joi.object().keys({
+    userId: Joi.string().custom(objectId).required(),
+  }),
   body: Joi.object().keys({
     currentPassword: Joi.string().required(),
-    newPassword: Joi.string().min(8).required(),
+    newPassword: Joi.string().required().custom(password),
   }),
 };
 

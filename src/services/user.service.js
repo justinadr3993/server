@@ -49,6 +49,19 @@ const getUserByEmail = async (email) => {
   return User.findOne({ email });
 };
 
+const updateUserPassword = async (userId, newPassword) => {
+  const user = await getUserById(userId);
+  
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  user.password = newPassword;
+  await user.save();
+  
+  return user;
+};
+
 const updateUserById = async (userId, updateBody) => {
   const user = await getUserById(userId);
   
@@ -83,6 +96,7 @@ module.exports = {
   queryUsers,
   getUserById,
   getUserByEmail,
+  updateUserPassword,
   updateUserById,
   deleteUserById,
 };
