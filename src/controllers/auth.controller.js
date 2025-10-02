@@ -2,7 +2,6 @@ const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { authService, userService, tokenService, emailService } = require('../services');
 const logger = require('../config/logger');
-const ApiError = require('../utils/ApiError');
 
 const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
@@ -31,6 +30,7 @@ const login = catchAsync(async (req, res) => {
   res.send({ user, tokens });
 });
 
+
 const logout = catchAsync(async (req, res) => {
   await authService.logout(req.body.refreshToken);
   res.status(httpStatus.NO_CONTENT).send();
@@ -42,32 +42,17 @@ const refreshTokens = catchAsync(async (req, res) => {
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
-  const { email } = req.body;
-  
-  // Check if user exists
-  const user = await userService.getUserByEmail(email);
-  if (!user) {
-    // Don't reveal whether email exists or not for security
-    res.status(httpStatus.NO_CONTENT).send();
-    return;
-  }
-  
-  try {
-    const resetPasswordToken = await tokenService.generateResetPasswordToken(user);
-    await emailService.sendResetPasswordEmail(email, resetPasswordToken);
-    res.status(httpStatus.NO_CONTENT).send();
-  } catch (error) {
-    logger.error('Failed to send reset password email:', error);
-    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to send reset password email');
-  }
+  const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
+  await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
+  res.status(httpStatus.NO_CONTENT).send();
 });
 
 const resetPassword = catchAsync(async (req, res) => {
-  const { token, password } = req.body;
+  const token = req.query.token;
   if (!token) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Reset token is required');
   }
-  await authService.resetPassword(token, password);
+  await authService.resetPassword(token, req.body.password);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
@@ -78,7 +63,7 @@ const sendVerificationEmail = catchAsync(async (req, res) => {
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
-  const { token } = req.body;
+  const token = req.query.token || req.body.token; 
   if (!token) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Verification token is required');
   }
