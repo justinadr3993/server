@@ -67,6 +67,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.13.23",
     "morgan": "^1.9.1",
+    "multer": "^2.0.2",
     "nodemailer": "^6.10.1",
     "openai": "^4.20.1",
     "passport": "^0.4.0",
