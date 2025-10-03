@@ -8,7 +8,24 @@ const createService = catchAsync(async (req, res) => {
 });
 
 const getServices = catchAsync(async (req, res) => {
-  const services = await serviceService.getServices(req.query);
+  const filter = {
+    title: req.query.title,
+    category: req.query.category,
+  };
+
+  Object.keys(filter).forEach((key) => {
+    if (filter[key] === undefined) {
+      delete filter[key];
+    }
+  });
+
+  const options = {
+    sortBy: req.query.sortBy,
+    page: parseInt(req.query.page, 10) || 1,
+    limit: parseInt(req.query.limit, 10) || 100, // Default to 100 like appointments
+  };
+
+  const services = await serviceService.getServices(filter, options);
   res.status(httpStatus.OK).send(services);
 });
 
