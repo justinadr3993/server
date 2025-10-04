@@ -7,10 +7,11 @@ const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
   const tokens = await tokenService.generateAuthTokens(user);
   
-  // Send verification email
   try {
     const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
+    logger.info(`Sending verification email to: ${user.email}`);
     await emailService.sendVerificationEmail(user.email, verifyEmailToken);
+    logger.info('Verification email sent successfully');
   } catch (emailError) {
     logger.error('Failed to send verification email:', emailError);
   }
