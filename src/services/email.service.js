@@ -6,7 +6,7 @@ const logger = require('../config/logger');
 const transport = nodemailer.createTransport({
   host: config.email.smtp.host,
   port: config.email.smtp.port,
-  secure: false, // true for 465, false for other ports
+  secure: config.email.smtp.secure, // should be false for port 587
   auth: {
     user: config.email.smtp.auth.user,
     pass: config.email.smtp.auth.pass,
@@ -29,7 +29,12 @@ if (config.env !== 'test') {
  * @returns {Promise}
  */
 const sendEmail = async (to, subject, html) => {
-  const msg = { from: config.email.from, to, subject, html };
+  const msg = { 
+    from: `"RasReserve" <${config.email.from}>`,
+    to, 
+    subject, 
+    html 
+  };
   await transport.sendMail(msg);
 };
 
