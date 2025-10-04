@@ -8,7 +8,24 @@ const createStock = catchAsync(async (req, res) => {
 });
 
 const getStocks = catchAsync(async (req, res) => {
-  const stocks = await stockService.getStocks(req.query);
+  const filter = {
+    type: req.query.type,
+    category: req.query.category,
+  };
+
+  Object.keys(filter).forEach((key) => {
+    if (filter[key] === undefined) {
+      delete filter[key];
+    }
+  });
+
+  const options = {
+    sortBy: req.query.sortBy,
+    page: parseInt(req.query.page, 10) || 1,
+    limit: parseInt(req.query.limit, 10) || 100,
+  };
+
+  const stocks = await stockService.getStocks(filter, options);
   res.status(httpStatus.OK).send(stocks);
 });
 

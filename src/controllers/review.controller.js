@@ -19,7 +19,22 @@ const createReview = catchAsync(async (req, res) => {
 });
 
 const getReviews = catchAsync(async (req, res) => {
-  const reviews = await reviewService.getReviews(req.query);
+  const filter = {
+  };
+
+  Object.keys(filter).forEach((key) => {
+    if (filter[key] === undefined) {
+      delete filter[key];
+    }
+  });
+
+  const options = {
+    sortBy: req.query.sortBy,
+    page: parseInt(req.query.page, 10) || 1,
+    limit: parseInt(req.query.limit, 10) || 100,
+  };
+
+  const reviews = await reviewService.getReviews(filter, options);
   res.status(httpStatus.OK).send(reviews);
 });
 
