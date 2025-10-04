@@ -2,6 +2,10 @@ const dotenv = require('dotenv');
 const path = require('path');
 const Joi = require('joi');
 
+console.log('Current directory:', __dirname);
+console.log('MONGODB_URL from process.env:', process.env.MONGODB_URL);
+console.log('All environment variables:', process.env);
+
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const envVarsSchema = Joi.object()
