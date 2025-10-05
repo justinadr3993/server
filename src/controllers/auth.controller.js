@@ -8,16 +8,17 @@ const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
   const tokens = await tokenService.generateAuthTokens(user);
   
-  (async () => {
-    try {
-      const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
-      logger.info(`Sending verification email to: ${user.email}`);
-      await emailService.sendVerificationEmail(user.email, verifyEmailToken);
-      logger.info('Verification email sent successfully');
-    } catch (emailError) {
-      logger.error('Failed to send verification email:', emailError);
-    }
-  })();
+  // Send verification email synchronously with proper error handling
+  try {
+    const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
+    logger.info(`Sending verification email to: ${user.email}`);
+    await emailService.sendVerificationEmail(user.email, verifyEmailToken);
+    logger.info('Verification email sent successfully');
+  } catch (emailError) {
+    logger.error('Failed to send verification email:', emailError);
+    // Don't throw error here, just log it and continue
+    // User can request verification email later
+  }
   
   res.status(httpStatus.CREATED).send({ 
     user, 
