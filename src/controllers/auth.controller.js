@@ -8,16 +8,22 @@ const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
   const tokens = await tokenService.generateAuthTokens(user);
   
-  try {
-    const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
-    logger.info(`Sending verification email to: ${user.email}`);
-    await emailService.sendVerificationEmail(user.email, verifyEmailToken);
-    logger.info('Verification email sent successfully');
-  } catch (emailError) {
-    logger.error('Failed to send verification email:', emailError);
-  }
+  (async () => {
+    try {
+      const verifyEmailToken = await tokenService.generateVerifyEmailToken(user);
+      logger.info(`Sending verification email to: ${user.email}`);
+      await emailService.sendVerificationEmail(user.email, verifyEmailToken);
+      logger.info('Verification email sent successfully');
+    } catch (emailError) {
+      logger.error('Failed to send verification email:', emailError);
+    }
+  })();
   
-  res.status(httpStatus.CREATED).send({ user, tokens });
+  res.status(httpStatus.CREATED).send({ 
+    user, 
+    tokens,
+    message: 'Registration successful! Please check your email for verification link.'
+  });
 });
 
 const login = catchAsync(async (req, res) => {
@@ -31,7 +37,6 @@ const login = catchAsync(async (req, res) => {
   const tokens = await tokenService.generateAuthTokens(user);
   res.send({ user, tokens });
 });
-
 
 const logout = catchAsync(async (req, res) => {
   await authService.logout(req.body.refreshToken);
