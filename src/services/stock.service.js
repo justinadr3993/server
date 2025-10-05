@@ -200,7 +200,6 @@ const getStockHistory = async (timeframe = 'month') => {
   const now = new Date();
   const startDate = new Date(now);
   
-  // Set time ranges based on timeframe
   if (timeframe === 'week') {
     startDate.setDate(now.getDate() - 7);
   } else if (timeframe === 'month') {
@@ -209,7 +208,6 @@ const getStockHistory = async (timeframe = 'month') => {
     startDate.setFullYear(now.getFullYear() - 1);
   }
 
-  // Reset time components
   startDate.setHours(0, 0, 0, 0);
   now.setHours(23, 59, 59, 999);
 
@@ -225,6 +223,9 @@ const getStockHistory = async (timeframe = 'month') => {
     },
     {
       $project: {
+        stockId: '$_id', // Include stock ID
+        stockType: '$type', 
+        stockCategory: '$category',
         date: {
           $dateToString: {
             format: timeframe === 'year' ? '%Y-%m' : '%Y-%m-%d',
@@ -232,27 +233,36 @@ const getStockHistory = async (timeframe = 'month') => {
           }
         },
         operation: '$history.operation',
-        change: '$history.change'
+        change: '$history.change',
+        price: '$history.price'
       }
     },
     {
       $group: {
         _id: {
           date: '$date',
-          operation: '$operation'
+          operation: '$operation',
+          stockId: '$stockId'
         },
-        totalChange: { $sum: '$change' }
+        totalChange: { $sum: '$change' },
+        stockType: { $first: '$stockType' }, 
+        stockCategory: { $first: '$stockCategory' },
+        price: { $first: '$price' }
       }
     },
     {
       $project: {
         date: '$_id.date',
         operation: '$_id.operation',
+        stockId: '$_id.stockId',
+        stockType: 1,
+        stockCategory: 1,
+        price: 1,
         totalChange: 1,
         _id: 0
       }
     },
-    { $sort: { date: 1 } }
+    { $sort: { date: 1, stockType: 1 } }
   ]);
 
   return history;
