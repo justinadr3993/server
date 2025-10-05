@@ -80,10 +80,6 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    pushSubscription: {
-      type: Object,
-      default: null,
-    },
   },
   {
     timestamps: true,
