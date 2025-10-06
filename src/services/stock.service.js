@@ -223,7 +223,7 @@ const getStockHistory = async (timeframe = 'month') => {
     },
     {
       $project: {
-        stockId: '$_id', // Include stock ID
+        stockId: '$_id',
         stockType: '$type', 
         stockCategory: '$category',
         date: {
@@ -234,7 +234,8 @@ const getStockHistory = async (timeframe = 'month') => {
         },
         operation: '$history.operation',
         change: '$history.change',
-        price: '$history.price'
+        price: '$history.price',
+        actualDate: '$history.createdAt'
       }
     },
     {
@@ -247,7 +248,8 @@ const getStockHistory = async (timeframe = 'month') => {
         totalChange: { $sum: '$change' },
         stockType: { $first: '$stockType' }, 
         stockCategory: { $first: '$stockCategory' },
-        price: { $first: '$price' }
+        price: { $first: '$price' },
+        actualDate: { $first: '$actualDate' }
       }
     },
     {
@@ -259,10 +261,11 @@ const getStockHistory = async (timeframe = 'month') => {
         stockCategory: 1,
         price: 1,
         totalChange: 1,
+        actualDate: 1,
         _id: 0
       }
     },
-    { $sort: { date: 1, stockType: 1 } }
+    { $sort: { actualDate: 1, stockType: 1 } }
   ]);
 
   return history;
