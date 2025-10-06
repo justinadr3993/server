@@ -9,7 +9,7 @@ const stockHistorySchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Oil', 'Tire', 'Brake'],
+    enum: ['Engine Oil', 'Tire Rotation', 'Spark Plug', 'Brake', 'Battery', 'Timing Belt', 'Clutch'],
     required: true,
   },
   price: {
@@ -36,7 +36,7 @@ const stockSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Oil', 'Tire', 'Brake'],
+      enum: ['Engine Oil', 'Tire Rotation', 'Spark Plug', 'Brake', 'Battery', 'Timing Belt', 'Clutch'],
       required: true,
     },
     price: {

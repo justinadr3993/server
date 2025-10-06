@@ -4,9 +4,17 @@ const { objectId } = require('./custom.validation');
 const createStock = {
   body: Joi.object().keys({
     type: Joi.string().required(),
-    category: Joi.string().valid('Oil', 'Tire', 'Brake').required(),
+    category: Joi.string().valid(
+      'Engine Oil', 
+      'Tire Rotation', 
+      'Spark Plug', 
+      'Brake', 
+      'Battery', 
+      'Timing Belt', 
+      'Clutch'
+    ).required(),
     price: Joi.number().required().positive(),
-    quantity: Joi.number().min(0).default(0) // Make optional with default 0
+    quantity: Joi.number().min(0).default(0)
   })
 };
 
@@ -43,12 +51,21 @@ const getStock = {
 const getStocks = {
   query: Joi.object().keys({
     type: Joi.string(),
-    category: Joi.string().valid('Oil', 'Tire', 'Brake'),
+    category: Joi.string().valid(
+      'Engine Oil', 
+      'Tire Rotation', 
+      'Spark Plug', 
+      'Brake', 
+      'Battery', 
+      'Timing Belt', 
+      'Clutch'
+    ),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer()
   })
 };
+
 
 const updateStock = {
   params: Joi.object().keys({
@@ -56,7 +73,15 @@ const updateStock = {
   }),
   body: Joi.object().keys({
     type: Joi.string(),
-    category: Joi.string().valid('Oil', 'Tire', 'Brake'),
+    category: Joi.string().valid(
+      'Engine Oil', 
+      'Tire Rotation', 
+      'Spark Plug', 
+      'Brake', 
+      'Battery', 
+      'Timing Belt', 
+      'Clutch'
+    ),
     price: Joi.number().positive(),
     quantity: Joi.number().min(0)
   }).min(1)
