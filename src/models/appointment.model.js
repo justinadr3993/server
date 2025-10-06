@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { toJSON, paginate } = require('./plugins');
 
 const appointmentSchema = mongoose.Schema(
-  {
+{
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     contactNumber: { type: String, required: true, trim: true },
@@ -30,7 +30,6 @@ const appointmentSchema = mongoose.Schema(
   }
 );
 
-// Add compound index to ensure unique appointments per service category and time
 appointmentSchema.index(
   { serviceCategory: 1, appointmentDateTime: 1 },
   { unique: true }

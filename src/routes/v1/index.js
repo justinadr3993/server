@@ -7,7 +7,6 @@ const serviceRoute = require('./service.route');
 const serviceCategoryRoute = require('./serviceCategory.route');
 const reviewRoute = require('./review.route');
 const healthController = require('../../controllers/health.controller');
-const config = require('../../config/config');
 const stockRoute = require('./stock.route');
 const router = express.Router();
 
