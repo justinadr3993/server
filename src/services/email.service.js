@@ -1,56 +1,32 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const config = require('../config/config');
 const logger = require('../config/logger');
 
-const transport = nodemailer.createTransport({
-  host: config.email.smtp.host,
-  port: config.email.smtp.port,
-  secure: false, 
-  auth: {
-    user: config.email.smtp.auth.user,
-    pass: config.email.smtp.auth.pass,
-  },
-  connectionTimeout: 10000, 
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-  pool: true,
-  maxConnections: 5,
-  maxMessages: 100
-});
-
-/* istanbul ignore next */
-if (config.env !== 'test') {
-  transport
-    .verify()
-    .then(() => logger.info('Connected to email server'))
-    .catch((error) => {
-      logger.warn('Unable to connect to email server:', error.message);
-      logger.warn('Make sure you have configured the SMTP options in .env correctly');
-    });
-}
+// Initialize Resend
+const resend = new Resend(config.email.resend.apiKey);
 
 /**
- * Send email with timeout
+ * Send email using Resend
  * @param {string} to
  * @param {string} subject
  * @param {string} html
  * @returns {Promise}
  */
 const sendEmail = async (to, subject, html) => {
-  const msg = { 
-    from: `"RasReserve" <${config.email.from}>`,
-    to, 
-    subject, 
-    html 
-  };
-  
-  // Add timeout to email sending
-  const emailPromise = transport.sendMail(msg);
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Email sending timeout')), 15000);
-  });
-  
-  return Promise.race([emailPromise, timeoutPromise]);
+  try {
+    const data = await resend.emails.send({
+      from: `RasReserve <${config.email.from}>`,
+      to: [to],
+      subject: subject,
+      html: html,
+    });
+
+    logger.info(`Email sent to ${to}: ${data.id}`);
+    return data;
+  } catch (error) {
+    logger.error(`Failed to send email to ${to}:`, error.message);
+    throw error;
+  }
 };
 
 /**
@@ -115,8 +91,8 @@ const sendVerificationEmail = async (to, token) => {
   }
 };
 
+
 module.exports = {
-  transport,
   sendEmail,
   sendResetPasswordEmail,
   sendVerificationEmail,
