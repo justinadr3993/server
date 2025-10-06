@@ -80,8 +80,7 @@ const updateAppointment = catchAsync(async (req, res) => {
       appointment.status === 'Upcoming') {
     req.body.status = 'Rescheduled';
   }
-
-  // Validate status transition
+  
   if (req.body.status) {
     const validTransitions = {
       Upcoming: ['Completed', 'Cancelled', 'No Arrival', 'Rescheduled'],

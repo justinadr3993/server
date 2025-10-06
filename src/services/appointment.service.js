@@ -42,9 +42,18 @@ const deleteAppointmentById = async (appointmentId) => {
 };
 
 const getAppointmentByCategoryAndTime = async (serviceCategoryId, appointmentDateTime) => {
+  const appointmentTime = new Date(appointmentDateTime);
+  appointmentTime.setMinutes(0, 0, 0); 
+  
+  const endTime = new Date(appointmentTime);
+  endTime.setHours(appointmentTime.getHours() + 1);
+  
   return Appointment.findOne({
     serviceCategory: serviceCategoryId,
-    appointmentDateTime: new Date(appointmentDateTime),
+    appointmentDateTime: {
+      $gte: appointmentTime,
+      $lt: endTime
+    },
     status: { $in: ['Upcoming', 'Rescheduled'] }
   });
 };
