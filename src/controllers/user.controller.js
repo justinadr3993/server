@@ -63,13 +63,11 @@ const changePassword = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  // Verify current password
   const isMatch = await user.isPasswordMatch(currentPassword);
   if (!isMatch) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Current password is incorrect');
   }
 
-  // Update password using the service
   await userService.updateUserPassword(userId, newPassword);
 
   res.status(httpStatus.OK).send({ message: 'Password changed successfully' });

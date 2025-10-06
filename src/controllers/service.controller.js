@@ -22,7 +22,7 @@ const getServices = catchAsync(async (req, res) => {
   const options = {
     sortBy: req.query.sortBy,
     page: parseInt(req.query.page, 10) || 1,
-    limit: parseInt(req.query.limit, 10) || 100, // Default to 100 like appointments
+    limit: parseInt(req.query.limit, 10) || 100,
   };
 
   const services = await serviceService.getServices(filter, options);

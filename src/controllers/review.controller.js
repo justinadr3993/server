@@ -50,7 +50,7 @@ const getReview = catchAsync(async (req, res) => {
 const updateReview = catchAsync(async (req, res) => {
   const review = await reviewService.updateReviewById(req.params.reviewId, req.body);
   
-  // Update the appointment with review data
+  // Update appointment with review data
   await appointmentService.updateAppointmentById(review.appointmentId, {
     review: {
       rating: review.rating,

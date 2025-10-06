@@ -7,7 +7,6 @@ const auth = require('../../middlewares/auth');
 
 const router = express.Router();
 
-// Updated the path to '/v1/staffs' to match the API request
 router.route('/').get(userController.getStaffs);
 
 router

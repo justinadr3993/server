@@ -17,7 +17,6 @@ router
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
   .delete(auth('manageUsers'), validate(userValidation.deleteUser), userController.deleteUser);
 
-// Fixed password change route - added proper validation
 router.route('/:userId/password')
   .patch(auth(), validate(userValidation.changePassword), userController.changePassword);
 
