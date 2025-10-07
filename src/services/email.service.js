@@ -38,8 +38,7 @@ const sendEmail = async (to, subject, html) => {
 const sendResetPasswordEmail = async (to, token) => {
   try {
     const subject = 'Reset Your Password';
-    // Use the correct client-side route
-    const resetPasswordUrl = `https://rasreserve.site/auth/reset-password?token=${token}`;
+    const resetPasswordUrl = `https://rasreserve.site/reset-password?token=${token}`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">Password Reset Request</h2>
@@ -77,8 +76,8 @@ const sendResetPasswordEmail = async (to, token) => {
 const sendVerificationEmail = async (to, token) => {
   try {
     const subject = 'Verify Your Email Address';
-    // Use the correct client-side route
-    const verificationEmailUrl = `https://rasreserve.site/auth/verify-email?token=${token}`;
+    // Fixed: Remove /auth from the path to match your React routes
+    const verificationEmailUrl = `https://rasreserve.site/verify-email?token=${token}`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">Welcome to RasReserve</h2>
