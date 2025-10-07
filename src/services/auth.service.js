@@ -64,9 +64,16 @@ const resetPassword = async (resetPasswordToken, newPassword) => {
     if (!user) {
       throw new Error('User not found');
     }
+    
     await userService.updateUserById(user.id, { password: newPassword });
-    await Token.deleteMany({ user: user.id, type: tokenTypes.RESET_PASSWORD });
+    
+    await Token.deleteMany({ 
+      user: user.id, 
+      type: tokenTypes.RESET_PASSWORD 
+    });
+    
   } catch (error) {
+    console.error('Reset password error:', error);
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed: Token invalid or expired');
   }
 };

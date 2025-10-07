@@ -39,6 +39,7 @@ const sendResetPasswordEmail = async (to, token) => {
   try {
     const subject = 'Reset Your Password';
     const resetPasswordUrl = `https://rasreserve.site/reset-password?token=${token}`;
+    
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">Password Reset Request</h2>
@@ -54,7 +55,7 @@ const sendResetPasswordEmail = async (to, token) => {
             ${resetPasswordUrl}
           </code>
         </p>
-        <p>This link will expire in 10 minutes.</p>
+        <p>This link will expire in ${config.jwt.resetPasswordExpirationMinutes} minutes.</p>
         <p>If you didn't request this, please ignore this email.</p>
         <p>Best regards,<br><strong>RasReserve Team</strong></p>
       </div>
