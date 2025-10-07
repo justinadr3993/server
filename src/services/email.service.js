@@ -38,18 +38,26 @@ const sendEmail = async (to, subject, html) => {
 const sendResetPasswordEmail = async (to, token) => {
   try {
     const subject = 'Reset Your Password';
-    const resetPasswordUrl = `https://rasreserve.site/reset-password?token=${token}`;
+    // Use the correct client-side route
+    const resetPasswordUrl = `https://rasreserve.site/auth/reset-password?token=${token}`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">Password Reset Request</h2>
         <p>Dear user,</p>
         <p>We received a request to reset your password. Click the button below to proceed:</p>
         <a href="${resetPasswordUrl}" 
-           style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+           style="display: inline-block; padding: 12px 24px; background-color: #1976d2; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold;">
           Reset Password
         </a>
-        <p>If you didn't request this, please ignore this email. This link will expire in 10 minutes.</p>
-        <p>Best regards,<br>RasReserve Team</p>
+        <p style="color: #666; font-size: 14px;">
+          If the button doesn't work, copy and paste this link in your browser:<br/>
+          <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 3px; word-break: break-all;">
+            ${resetPasswordUrl}
+          </code>
+        </p>
+        <p>This link will expire in 10 minutes.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+        <p>Best regards,<br><strong>RasReserve Team</strong></p>
       </div>
     `;
     await sendEmail(to, subject, html);
@@ -69,18 +77,25 @@ const sendResetPasswordEmail = async (to, token) => {
 const sendVerificationEmail = async (to, token) => {
   try {
     const subject = 'Verify Your Email Address';
-    const verificationEmailUrl = `https://rasreserve.site/verify-email?token=${token}`;
+    // Use the correct client-side route
+    const verificationEmailUrl = `https://rasreserve.site/auth/verify-email?token=${token}`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">Welcome to RasReserve</h2>
         <p>Dear user,</p>
         <p>Thank you for registering. Please verify your email address by clicking the button below:</p>
         <a href="${verificationEmailUrl}" 
-           style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+           style="display: inline-block; padding: 12px 24px; background-color: #1976d2; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold;">
           Verify Email
         </a>
+        <p style="color: #666; font-size: 14px;">
+          If the button doesn't work, copy and paste this link in your browser:<br/>
+          <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 3px; word-break: break-all;">
+            ${verificationEmailUrl}
+          </code>
+        </p>
         <p>If you didn't create an account, please ignore this email.</p>
-        <p>Best regards,<br>RasReserve Team</p>
+        <p>Best regards,<br><strong>RasReserve Team</strong></p>
       </div>
     `;
     await sendEmail(to, subject, html);
@@ -90,7 +105,6 @@ const sendVerificationEmail = async (to, token) => {
     throw error;
   }
 };
-
 
 module.exports = {
   sendEmail,
