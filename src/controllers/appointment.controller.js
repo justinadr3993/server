@@ -13,7 +13,7 @@ const createAppointment = catchAsync(async (req, res) => {
     throw error;
   }
 
-  // Check if appointment time is already booked for this service category
+  // Check if appointment time is already booked for this service category (only for accepted appointments)
   const existingAppointment = await appointmentService.getAppointmentByCategoryAndTime(
     req.body.serviceCategory,
     req.body.appointmentDateTime
@@ -33,7 +33,6 @@ const createAppointment = catchAsync(async (req, res) => {
 
   res.status(httpStatus.CREATED).send(appointment);
 });
-
 
 const getAppointments = catchAsync(async (req, res) => {
   const filter = {
@@ -83,6 +82,7 @@ const updateAppointment = catchAsync(async (req, res) => {
   
   if (req.body.status) {
     const validTransitions = {
+      Requested: ['Upcoming', 'Cancelled'], // Admin/Staff can accept (Upcoming) or reject (Cancelled) requested appointments
       Upcoming: ['Completed', 'Cancelled', 'No Arrival', 'Rescheduled'],
       Rescheduled: ['Completed', 'Cancelled', 'No Arrival'],
       Completed: [],
@@ -90,7 +90,7 @@ const updateAppointment = catchAsync(async (req, res) => {
       'No Arrival': []
     };
 
-    if (!validTransitions[appointment.status].includes(req.body.status)) {
+    if (!validTransitions[appointment.status]?.includes(req.body.status)) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
         `Invalid status transition from ${appointment.status} to ${req.body.status}`
@@ -109,10 +109,57 @@ const deleteAppointment = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+// New endpoint to accept appointment
+const acceptAppointment = catchAsync(async (req, res) => {
+  const appointment = await appointmentService.getAppointmentById(req.params.appointmentId);
+  if (!appointment) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Appointment not found');
+  }
+
+  if (appointment.status !== 'Requested') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Only requested appointments can be accepted');
+  }
+
+  // Check if the time slot is still available
+  const existingAppointment = await appointmentService.getAppointmentByCategoryAndTime(
+    appointment.serviceCategory,
+    appointment.appointmentDateTime
+  );
+  
+  if (existingAppointment && existingAppointment._id.toString() !== appointment._id.toString()) {
+    throw new ApiError(
+      httpStatus.CONFLICT,
+      'This time slot is no longer available. Please ask the customer to choose a different time.'
+    );
+  }
+
+  appointment.status = 'Upcoming';
+  await appointment.save();
+
+  res.send(appointment);
+});
+
+// New endpoint to reject appointment
+const rejectAppointment = catchAsync(async (req, res) => {
+  const appointment = await appointmentService.getAppointmentById(req.params.appointmentId);
+  if (!appointment) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Appointment not found');
+  }
+
+  if (appointment.status !== 'Requested') {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Only requested appointments can be rejected');
+  }
+
+  await appointmentService.deleteAppointmentById(req.params.appointmentId);
+  res.status(httpStatus.NO_CONTENT).send();
+});
+
 module.exports = {
   createAppointment,
   getAppointments,
   getAppointment,
   updateAppointment,
   deleteAppointment,
+  acceptAppointment,
+  rejectAppointment,
 };

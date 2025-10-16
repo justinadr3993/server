@@ -12,7 +12,7 @@ const createAppointment = {
     additionalNotes: Joi.string().allow('').optional(),
     userId: Joi.string().custom(objectId).required(),
     appointmentDateTime: Joi.date().greater('now').required(),
-    status: Joi.string().valid('Upcoming', 'Completed', 'Cancelled', 'No Arrival', 'Rescheduled').default('Upcoming'),
+    status: Joi.string().valid('Requested', 'Upcoming', 'Completed', 'Cancelled', 'No Arrival', 'Rescheduled').default('Requested'),
   }),
 };
 
@@ -31,7 +31,7 @@ const updateAppointment = {
       additionalNotes: Joi.string().allow(''),
       userId: Joi.string().custom(objectId),
       appointmentDateTime: Joi.date(),
-      status: Joi.string().valid('Upcoming', 'Completed', 'Cancelled', 'No Arrival', 'Rescheduled'),
+      status: Joi.string().valid('Requested', 'Upcoming', 'Completed', 'Cancelled', 'No Arrival', 'Rescheduled'),
     })
     .min(1),
 };
@@ -47,7 +47,7 @@ const getAppointments = {
     serviceCategory: Joi.string().custom(objectId),
     serviceType: Joi.string().custom(objectId),
     userId: Joi.string().custom(objectId),
-    status: Joi.string().valid('Upcoming', 'Completed', 'Cancelled', 'No Arrival', 'Rescheduled'),
+    status: Joi.string().valid('Requested', 'Upcoming', 'Completed', 'Cancelled', 'No Arrival', 'Rescheduled'),
     date: Joi.string(),
     page: Joi.number().integer().min(1),
     limit: Joi.number().integer().min(1),

@@ -16,4 +16,12 @@ router
   .patch(validate(appointmentValidation.updateAppointment), appointmentController.updateAppointment)
   .delete(validate(appointmentValidation.deleteAppointment), appointmentController.deleteAppointment);
 
+router
+  .route('/:appointmentId/accept')
+  .patch(appointmentController.acceptAppointment);
+
+router
+  .route('/:appointmentId/reject')
+  .delete(appointmentController.rejectAppointment);
+
 module.exports = router;

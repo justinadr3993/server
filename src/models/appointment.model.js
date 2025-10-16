@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { toJSON, paginate } = require('./plugins');
 
 const appointmentSchema = mongoose.Schema(
-{
+  {
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     contactNumber: { type: String, required: true, trim: true },
@@ -15,8 +15,8 @@ const appointmentSchema = mongoose.Schema(
     appointmentDateTime: { type: Date, required: true },
     status: { 
       type: String, 
-      enum: ['Upcoming', 'Completed', 'Cancelled', 'No Arrival', 'Rescheduled'], 
-      default: 'Upcoming' 
+      enum: ['Requested', 'Upcoming', 'Completed', 'Cancelled', 'No Arrival', 'Rescheduled'], 
+      default: 'Requested' 
     },
     review: {
       rating: { type: Number, min: 1, max: 5 },

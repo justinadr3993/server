@@ -54,7 +54,7 @@ const getAppointmentByCategoryAndTime = async (serviceCategoryId, appointmentDat
       $gte: appointmentTime,
       $lt: endTime
     },
-    status: { $in: ['Upcoming', 'Rescheduled'] }
+    status: { $in: ['Upcoming', 'Rescheduled'] } // Only check accepted appointments for conflicts
   });
 };
 
