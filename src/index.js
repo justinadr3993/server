@@ -1,14 +1,25 @@
+const https = require('https');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
 
 let server;
+
+// SSL certificate options
+const sslOptions = {
+  key: fs.readFileSync('/etc/letsencrypt/live/rasreserve.site/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/rasreserve.site/fullchain.pem')
+};
+
 mongoose.connect(config.mongoose.url, config.mongoose.options)
   .then(() => {
     logger.info('Connected to MongoDB Atlas');
-    server = app.listen(config.port, () => {
-      logger.info(`Listening to port ${config.port}`);
+    
+    // Create HTTPS server on port 443
+    server = https.createServer(sslOptions, app).listen(443, () => {
+      logger.info(`HTTPS Server running on port 443 - https://rasreserve.site`);
     });
   })
   .catch((err) => {
