@@ -77,8 +77,9 @@ const sendResetPasswordEmail = async (to, token) => {
 const sendVerificationEmail = async (to, token) => {
   try {
     const subject = 'Verify Your Email Address';
-    // Fixed: Remove /auth from the path to match your React routes
+    // Use the correct client-side route
     const verificationEmailUrl = `https://rasreserve.site/verify-email?token=${token}`;
+    
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">Welcome to RasReserve</h2>
@@ -94,6 +95,7 @@ const sendVerificationEmail = async (to, token) => {
             ${verificationEmailUrl}
           </code>
         </p>
+        <p>This link will expire in ${config.jwt.verifyEmailExpirationMinutes} minutes.</p>
         <p>If you didn't create an account, please ignore this email.</p>
         <p>Best regards,<br><strong>RasReserve Team</strong></p>
       </div>

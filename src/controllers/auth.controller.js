@@ -80,8 +80,12 @@ const verifyEmail = catchAsync(async (req, res) => {
   if (!token) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Verification token is required');
   }
+  
   await authService.verifyEmail(token);
-  res.status(httpStatus.OK).send({ message: 'Email verified successfully' });
+  res.status(httpStatus.OK).send({ 
+    message: 'Email verified successfully',
+    verified: true 
+  });
 });
 
 module.exports = {
