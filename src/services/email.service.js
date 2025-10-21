@@ -77,44 +77,27 @@ const sendResetPasswordEmail = async (to, token) => {
 const sendVerificationEmail = async (to, token) => {
   try {
     const subject = 'Verify Your Email Address';
-    // Ensure the URL matches your client-side route
+    // Fixed: Remove /auth from the path to match your React routes
     const verificationEmailUrl = `https://rasreserve.site/verify-email?token=${token}`;
-    
     const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #1976d2; margin: 0;">RasReserve</h2>
-        </div>
-        
-        <h3 style="color: #333; margin-bottom: 20px;">Verify Your Email Address</h3>
-        
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #333;">Welcome to RasReserve</h2>
         <p>Dear user,</p>
-        <p>Thank you for registering with RasReserve! To complete your registration and start using our services, please verify your email address by clicking the button below:</p>
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationEmailUrl}" 
-             style="display: inline-block; padding: 14px 28px; background-color: #1976d2; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px;">
-            Verify Email Address
-          </a>
-        </div>
-        
-        <p style="color: #666; font-size: 14px; background: #f9f9f9; padding: 12px; border-radius: 4px;">
-          <strong>Note:</strong> If the button doesn't work, copy and paste this link into your browser:<br/>
-          <code style="background: #f5f5f5; padding: 8px 12px; border-radius: 3px; word-break: break-all; display: inline-block; margin-top: 8px;">
+        <p>Thank you for registering. Please verify your email address by clicking the button below:</p>
+        <a href="${verificationEmailUrl}" 
+           style="display: inline-block; padding: 12px 24px; background-color: #1976d2; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold;">
+          Verify Email
+        </a>
+        <p style="color: #666; font-size: 14px;">
+          If the button doesn't work, copy and paste this link in your browser:<br/>
+          <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 3px; word-break: break-all;">
             ${verificationEmailUrl}
           </code>
         </p>
-        
-        <p>This verification link will expire in ${config.jwt.verifyEmailExpirationMinutes} minutes.</p>
-        
-        <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #e0e0e0; padding-top: 20px;">
-          If you didn't create an account with RasReserve, please ignore this email.<br/>
-          Best regards,<br/>
-          <strong>The RasReserve Team</strong>
-        </p>
+        <p>If you didn't create an account, please ignore this email.</p>
+        <p>Best regards,<br><strong>RasReserve Team</strong></p>
       </div>
     `;
-    
     await sendEmail(to, subject, html);
     logger.info(`Verification email sent to ${to}`);
   } catch (error) {
