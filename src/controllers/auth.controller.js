@@ -76,7 +76,8 @@ const sendVerificationEmail = catchAsync(async (req, res) => {
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
-  const token = req.query.token || req.body.token; 
+  const token = req.body.token || req.query.token;
+  
   if (!token) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Verification token is required');
   }

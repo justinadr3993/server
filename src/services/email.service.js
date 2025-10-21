@@ -77,7 +77,6 @@ const sendResetPasswordEmail = async (to, token) => {
 const sendVerificationEmail = async (to, token) => {
   try {
     const subject = 'Verify Your Email Address';
-    // Use the correct client-side route
     const verificationEmailUrl = `https://rasreserve.site/verify-email?token=${token}`;
     
     const html = `
