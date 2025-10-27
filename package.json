@@ -14,7 +14,6 @@
     "start": "node src/index.js",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "build": "npm install",
-    "vercel-build": "npm install",
     "test": "jest -i --colors --verbose --detectOpenHandles",
     "test:watch": "jest -i --watchAll",
     "coverage": "jest -i --coverage",
