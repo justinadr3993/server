@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: server-api
+    env: node
+    region: ohio # or any region you prefer
+    repo: https://github.com/justinadg/server.git
+    branch: main
+    autoDeploy: true
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URL
+        fromDatabase:
+          name: mongodb-atlas
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: BASE_API_URL
+        value: https://server-api.onrender.com/v1
