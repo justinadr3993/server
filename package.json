@@ -4,8 +4,8 @@
   "description": "Create a Node.js app for building production-ready RESTful APIs using Express, by running one command",
   "bin": "bin/createNodejsApp.js",
   "main": "src/index.js",
-  "repository": "https://github.com/hagopj13/node-express-boilerplate.git",
-  "author": "Hagop Jamkojian <hagopj13@gmail.com>",
+  "repository": "https://github.com/justinadr3993/server.git",
+  "author": "justinadr <justinuminga@gmail.com>",
   "license": "MIT",
   "engines": {
     "node": ">=12.0.0"
@@ -14,6 +14,7 @@
     "start": "node src/index.js",
     "dev": "cross-env NODE_ENV=development nodemon src/index.js",
     "build": "npm install",
+    "vercel-build": "npm install",
     "test": "jest -i --colors --verbose --detectOpenHandles",
     "test:watch": "jest -i --watchAll",
     "coverage": "jest -i --coverage",
