@@ -5,7 +5,15 @@ const { appointmentService, userService, serviceService } = require('../services
 
 const createAppointment = catchAsync(async (req, res) => {
   try {
-    await userService.getUserById(req.body.userId);
+    const user = await userService.getUserById(req.body.userId);
+    
+    // Check if user is restricted from booking appointments
+    if (user.isBookingRestricted()) {
+      throw new ApiError(
+        httpStatus.FORBIDDEN, 
+        'Your account is temporarily restricted from booking appointments due to previous no-show incidents. Please contact support.'
+      );
+    }
   } catch (error) {
     if (error.statusCode === httpStatus.NOT_FOUND) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid user specified');
@@ -95,6 +103,11 @@ const updateAppointment = catchAsync(async (req, res) => {
         httpStatus.BAD_REQUEST,
         `Invalid status transition from ${appointment.status} to ${req.body.status}`
       );
+    }
+
+    // Handle red tagging when status changes to 'No Arrival'
+    if (req.body.status === 'No Arrival' && appointment.status !== 'No Arrival') {
+      await userService.redTagUser(appointment.userId);
     }
   }
 

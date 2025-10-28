@@ -80,6 +80,19 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Add red tag tracking
+    isRedTagged: {
+      type: Boolean,
+      default: false,
+    },
+    redTaggedAt: {
+      type: Date,
+      default: null,
+    },
+    redTagExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -109,6 +122,17 @@ userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
 userSchema.methods.isPasswordMatch = async function (password) {
   const user = this;
   return bcrypt.compare(password, user.password);
+};
+
+/**
+ * Check if user is currently restricted from booking appointments
+ * @returns {boolean}
+ */
+userSchema.methods.isBookingRestricted = function () {
+  if (!this.isRedTagged || !this.redTagExpiresAt) {
+    return false;
+  }
+  return new Date() < new Date(this.redTagExpiresAt);
 };
 
 userSchema.pre('save', async function (next) {

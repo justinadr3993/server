@@ -22,7 +22,7 @@ const register = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send({ 
     user, 
     tokens,
-    message: 'Registration successful! Please check your email for verification link.'
+    message: 'Please check your email for verification link.'
   });
 });
 

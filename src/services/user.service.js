@@ -27,17 +27,14 @@ const getUserById = async (id, requester = null) => {
     );
   }
 
-  // Public access for staff profiles
   if (user.role === 'staff') {
     return user;
   }
 
-  // Internal access allowed
   if (!requester) {
     return user;
   }
 
-  // Restrict access for non-admin/non-owner
   if (requester.role !== 'admin' && String(user._id) !== String(requester.id)) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden');
   }
@@ -91,6 +88,36 @@ const deleteUserById = async (userId) => {
   return user;
 };
 
+// method to red tag a user
+const redTagUser = async (userId) => {
+  const user = await getUserById(userId);
+  
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  const redTagExpiresAt = new Date();
+  redTagExpiresAt.setDate(redTagExpiresAt.getDate() + 3); // 3 days from now
+
+  user.isRedTagged = true;
+  user.redTaggedAt = new Date();
+  user.redTagExpiresAt = redTagExpiresAt;
+
+  await user.save();
+  return user;
+};
+
+// check if user can book appointments
+const canUserBookAppointments = async (userId) => {
+  const user = await getUserById(userId);
+  
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  return !user.isBookingRestricted();
+};
+
 module.exports = {
   createUser,
   queryUsers,
@@ -99,4 +126,6 @@ module.exports = {
   updateUserPassword,
   updateUserById,
   deleteUserById,
+  redTagUser,
+  canUserBookAppointments,
 };
