@@ -27,9 +27,8 @@ const updateStockById = async (stockId, updateBody) => {
     const change = updateBody.quantity - stock.quantity;
     const operation = change > 0 ? 'restock' : 'usage';
     
-    // Create date with Philippines timezone (UTC+8)
-    const phDate = new Date();
-    phDate.setHours(phDate.getHours() + 8); // Adjust to Philippines time
+    // Use current date without timezone adjustment (MongoDB stores as UTC)
+    const currentDate = new Date();
     
     stock.history.push({
       type: stock.type,
@@ -37,7 +36,7 @@ const updateStockById = async (stockId, updateBody) => {
       price: stock.price,
       change: Math.abs(change),
       operation,
-      createdAt: phDate // Explicitly set the date with timezone adjustment
+      createdAt: currentDate
     });
   }
 
@@ -67,9 +66,8 @@ const recordStockChange = async (stockId, change, operation) => {
     actualChange = -change; // Make it negative for usage
   }
 
-  // Create date with Philippines timezone (UTC+8)
-  const phDate = new Date();
-  phDate.setHours(phDate.getHours() + 8); // Adjust to Philippines time
+  // Use current date without timezone adjustment
+  const currentDate = new Date();
 
   stock.history.push({
     type: stock.type,
@@ -77,7 +75,7 @@ const recordStockChange = async (stockId, change, operation) => {
     price: stock.price,
     change: Math.abs(change),
     operation,
-    createdAt: phDate // Explicitly set the date with timezone adjustment
+    createdAt: currentDate
   });
 
   stock.quantity += actualChange;
@@ -240,7 +238,7 @@ const getStockHistory = async (timeframe = 'month') => {
           $dateToString: {
             format: timeframe === 'year' ? '%Y-%m' : '%Y-%m-%d',
             date: '$history.createdAt',
-            timezone: '+08:00' // Add Philippines timezone
+            timezone: 'Asia/Manila' // Use Asia/Manila timezone
           }
         },
         operation: '$history.operation',
@@ -276,7 +274,7 @@ const getStockHistory = async (timeframe = 'month') => {
         _id: 0
       }
     },
-    { $sort: { actualDate: 1, stockType: 1 } }
+    { $sort: { date: 1, stockType: 1 } }
   ]);
 
   return history;
