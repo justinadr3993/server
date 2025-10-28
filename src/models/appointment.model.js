@@ -10,6 +10,8 @@ const appointmentSchema = mongoose.Schema(
     serviceCategory: { type: mongoose.Schema.Types.ObjectId, ref: 'ServiceCategory', required: true },
     serviceType: { type: mongoose.Schema.Types.ObjectId, ref: 'Service', required: true },
     additionalNotes: { type: String, trim: true, required: false },
+    downPayment: { type: String, trim: true, required: false },
+    transactionReferenceNo: { type: String, trim: true, required: false },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     bookedAt: { type: Date, default: Date.now },
     appointmentDateTime: { type: Date, required: true },

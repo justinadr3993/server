@@ -14,11 +14,9 @@ const verifyCallback = (req, resolve, reject, requiredRights) => async (err, use
   if (req.params.userId) {
     const requestedUser = await userService.getUserById(req.params.userId);
     if (requestedUser.role === 'staff') {
-      return resolve(); // Allow access to staffs
+      return resolve();
     }
   }
-
-  // Check if the user has the required rights
   if (requiredRights.length) {
     const userRights = roleRights.get(user.role);
     const hasRequiredRights = requiredRights.every((requiredRight) => userRights.includes(requiredRight));
