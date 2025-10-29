@@ -23,9 +23,20 @@ const updateStockById = async (stockId, updateBody) => {
     throw new Error('Stock item not found');
   }
 
-  if (updateBody.quantity !== undefined && updateBody.quantity !== stock.quantity) {
-    const change = updateBody.quantity - stock.quantity;
-    const operation = change > 0 ? 'restock' : 'usage';
+  // Store the original quantity before update
+  const originalQuantity = stock.quantity;
+  
+  // Update the stock with new values
+  Object.assign(stock, updateBody);
+  await stock.save();
+
+  // Calculate quantity change and record in history if there's a change
+  const newQuantity = stock.quantity;
+  const quantityChange = newQuantity - originalQuantity;
+
+  if (quantityChange !== 0) {
+    const operation = quantityChange > 0 ? 'restock' : 'usage';
+    const changeAmount = Math.abs(quantityChange);
     
     // Use current date without timezone adjustment (MongoDB stores as UTC)
     const currentDate = new Date();
@@ -34,14 +45,14 @@ const updateStockById = async (stockId, updateBody) => {
       type: stock.type,
       category: stock.category,
       price: stock.price,
-      change: Math.abs(change),
+      change: changeAmount,
       operation,
       createdAt: currentDate
     });
+
+    await stock.save();
   }
 
-  Object.assign(stock, updateBody);
-  await stock.save();
   return stock;
 };
 
@@ -161,7 +172,7 @@ const getStockAnalytics = async () => {
       lowStockItems: 0
     },
     lowStockItemsList,
-    trends: []
+    trends
   };
 };
 
@@ -238,7 +249,7 @@ const getStockHistory = async (timeframe = 'month') => {
           $dateToString: {
             format: timeframe === 'year' ? '%Y-%m' : '%Y-%m-%d',
             date: '$history.createdAt',
-            timezone: 'Asia/Manila' // Use Asia/Manila timezone
+            timezone: 'Asia/Manila'
           }
         },
         operation: '$history.operation',
